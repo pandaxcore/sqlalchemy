@@ -5,6 +5,7 @@ from typing import Optional
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import relationship
+from sqlalchemy import insert
 
 
 class Base(DeclarativeBase):
@@ -53,6 +54,26 @@ def migrate_tables():
         print(f"Migration were not transacted:{err}")
 
 
+user_table = User
+
+
+def insert_data():
+    # stmt = insert(User).values(
+    #     name="Patrick",
+    #     fullname="Spongebob Squarepants"
+    # )
+    # compiled = stmt.compile()
+    # print(compiled)
+    stmt = insert(User).values([
+        {"name": "sandy", "fullname": "Sandy Cheeks"},
+        {"name": "patrick", "fullname": "Patrick Stars"},
+    ])
+    with engine.connect() as conn:
+        conn.execute(stmt)
+        conn.commit()
+
+
 if __name__ == "__main__":
     pg_connect()
     migrate_tables()
+    insert_data()
