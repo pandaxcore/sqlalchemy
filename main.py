@@ -6,6 +6,7 @@ from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import relationship
 from sqlalchemy import insert
+from sqlalchemy.exc import SQLAlchemyError
 
 
 class Base(DeclarativeBase):
@@ -41,8 +42,8 @@ engine = create_engine(
 
 def pg_connect():
     try:
-        engine.connect()
-        print("Connection established")
+        with engine.connect():
+            print("Connection established")
     except ConnectionError as error:
         print(error)
 
@@ -50,7 +51,7 @@ def pg_connect():
 def migrate_tables():
     try:
         Base.metadata.create_all(engine)
-    except ConnectionError as err:
+    except SQLAlchemyError as err:
         print(f"Migration were not transacted:{err}")
 
 
