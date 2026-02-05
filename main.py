@@ -1,4 +1,5 @@
 import time
+from sqlalchemy import select
 from sqlalchemy.orm import mapped_column, relationship
 from sqlalchemy.orm import Mapped
 from sqlalchemy import ForeignKey
@@ -43,7 +44,7 @@ class Address(Base):
     user: Mapped["User"] = relationship(back_populates="addresses")
 
 
-if __name__ == "__main__":
+def add_data():
     with Session(engine) as session:
         spongebob = User(
             name="spongebob",
@@ -62,4 +63,12 @@ if __name__ == "__main__":
         session.add_all([spongebob, sandy, patrick])
         time.sleep(5)
         session.commit()
-    Base.metadata.create_all(engine)
+
+
+Base.metadata.create_all(engine)
+
+if __name__ == "__main__":
+    session = Session(engine)
+    stmt = select(User).where(User.name.in_(["spongebob", "sandy"]))
+    for user in session.scalars(stmt):
+        print(user)
