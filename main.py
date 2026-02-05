@@ -1,12 +1,23 @@
-from sqlalchemy import create_engine, String, ForeignKey
-from sqlalchemy.orm import DeclarativeBase
-from typing import List
-from typing import Optional
+import time
+from sqlalchemy.orm import mapped_column, relationship
 from sqlalchemy.orm import Mapped
-from sqlalchemy.orm import mapped_column
-from sqlalchemy.orm import relationship
-from sqlalchemy import insert
-from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy import ForeignKey
+from sqlalchemy import String
+from sqlalchemy.orm import DeclarativeBase
+from typing import List, Optional
+
+from sqlalchemy import create_engine
+from sqlalchemy.orm import Session
+
+LOGIN = "postgres"
+PASSWORD = "postgres"
+HOST = "localhost"
+PORT = 5432
+DB_NAME = "postgres"
+
+engine = create_engine(
+    f"postgresql+psycopg2://{LOGIN}:{PASSWORD}@{HOST}:{PORT}/{DB_NAME}"
+)
 
 
 class Base(DeclarativeBase):
@@ -15,66 +26,40 @@ class Base(DeclarativeBase):
 
 class User(Base):
     __tablename__ = "user_account"
+
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(30))
     fullname: Mapped[Optional[str]]
-    addresses: Mapped[List["Address"]] = relationship(back_populates="user")
-
-    def __repr__(self) -> str:
-        return f"User(id={self.id!r}, name={self.name!r}, fullname={self.fullname!r})"
+    addresses: Mapped[List["Address"]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
+    )
 
 
 class Address(Base):
     __tablename__ = "address"
     id: Mapped[int] = mapped_column(primary_key=True)
     email_address: Mapped[str]
-    user_id = mapped_column(ForeignKey("user_account.id"))
-    user: Mapped[User] = relationship(back_populates="addresses")
-
-    def __repr__(self) -> str:
-        return f"Address(id={self.id!r}, email_address={self.email_address!r})"
-
-
-engine = create_engine(
-    "postgresql://postgres:postgres@localhost:5432/postgres"
-)
-
-
-def pg_connect():
-    try:
-        with engine.connect():
-            print("Connection established")
-    except ConnectionError as error:
-        print(error)
-
-
-def migrate_tables():
-    try:
-        Base.metadata.create_all(engine)
-    except SQLAlchemyError as err:
-        print(f"Migration were not transacted:{err}")
-
-
-user_table = User
-
-
-def insert_data():
-    # stmt = insert(User).values(
-    #     name="Patrick",
-    #     fullname="Spongebob Squarepants"
-    # )
-    # compiled = stmt.compile()
-    # print(compiled)
-    stmt = insert(User).values([
-        {"name": "sandy", "fullname": "Sandy Cheeks"},
-        {"name": "patrick", "fullname": "Patrick Stars"},
-    ])
-    with engine.connect() as conn:
-        conn.execute(stmt)
-        conn.commit()
+    user_id: Mapped[int] = mapped_column(ForeignKey("user_account.id"))
+    user: Mapped["User"] = relationship(back_populates="addresses")
 
 
 if __name__ == "__main__":
-    pg_connect()
-    migrate_tables()
-    insert_data()
+    with Session(engine) as session:
+        spongebob = User(
+            name="spongebob",
+            fullname="Spongebob Squarepants",
+            addresses=[Address(email_address="spongebob@sqlalchemy.org")]
+        )
+        sandy = User(
+            name="sandy",
+            fullname="Sandy Cheeks",
+            addresses=[
+                Address(email_address="sandy@sqlalchemy.org"),
+                Address(email_address="sandy@squirrelpower.org"),
+            ],
+        )
+        patrick = User(name="patrick", fullname="Patrick Star")
+        session.add_all([spongebob, sandy, patrick])
+        time.sleep(5)
+        session.commit()
+    Base.metadata.create_all(engine)
