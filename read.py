@@ -6,7 +6,7 @@ from sqlalchemy import String, Integer, Date
 from sqlalchemy.orm import mapped_column
 from typing import Optional
 from sqlalchemy.orm import Session
-from datetime import datetime
+from datetime import date, datetime
 
 DB_USER = "postgres"
 DB_PASSWORD = "postgres"
@@ -38,7 +38,7 @@ class Person(Base):
     gender: Mapped[Optional[str]] = mapped_column(String(10))
     country: Mapped[Optional[str]] = mapped_column(String(50))
     age: Mapped[Optional[int]] = mapped_column(Integer)
-    date: Mapped[Optional[str]] = mapped_column(Date)
+    date: Mapped[Optional[date]] = mapped_column(Date)
     tab_num: Mapped[int] = mapped_column(
         Integer, unique=True, nullable=False)
 
