@@ -65,10 +65,11 @@ def add_data():
         session.commit()
 
 
+def get_data():
+    pass
+
+
 Base.metadata.create_all(engine)
 
 if __name__ == "__main__":
-    session = Session(engine)
-    stmt = select(User).where(User.name.in_(["spongebob", "sandy"]))
-    for user in session.scalars(stmt):
-        print(user)
+    pass
