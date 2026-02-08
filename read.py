@@ -47,7 +47,7 @@ class Person(Base):
 engine = create_engine(URL)
 Base.metadata.create_all(engine)
 
-df = pd.read_excel('file_example_XLS_10.xls')\
+df = pd.read_excel('file_example_XLS_10.xls')
 
 with Session(engine) as session:
     for _, row in df.iterrows():
